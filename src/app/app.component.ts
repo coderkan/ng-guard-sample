@@ -1,5 +1,6 @@
 import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -12,33 +13,41 @@ export class AppComponent implements OnInit {
 
   @ViewChild('closeModal') closeModal: ElementRef;
 
-  isLoggedIn = false;
+  constructor(private router: Router, private authService: AuthService) {
 
-  constructor(private router: Router) {
-    this.isLoggedIn = false;
   }
+
   ngOnInit(): void {
   }
 
 
-  loginAsUser() {
-    this.isLoggedIn = true;
-  }
-
-  loginAsAdmin() {
-    console.log('Login As aDmin');
-    this.isLoggedIn = true;
-    this.closeModal.nativeElement.click();
-
+  login(val: string) {
+    this.authService.login(val)
+      .subscribe(res => {
+        if (res.success) {
+          this.closeModal.nativeElement.click();
+        }
+      });
   }
 
   logout() {
-    this.isLoggedIn = false;
-    this.router.navigate(['/home']);
+
+    this.authService.logout()
+      .subscribe(res => {
+        if (!res.success) {
+          this.router.navigate(['/home']);
+
+        }
+      });
   }
 
   goToDashBoard() {
-    this.router.navigate(['/admin']);
+    let role = this.authService.getRole();
+    if (role === 'ROLE_ADMIN')
+      this.router.navigate(['admin']);
+    if (role === 'ROLE_USER')
+      this.router.navigate(['/user']);
+
   }
 
 }
