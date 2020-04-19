@@ -1,27 +1,234 @@
-# NgGuard
+# Angular Role Based Route Guard
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.0.5.
+Hi everyone,
 
-## Development server
+In this tutorial, I would like to show you how to implement role-based access control using Angular 9. 
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Demo's scenario;
 
-## Code scaffolding
+I have created a simple application that includes **Admin**, **User** roles. On the main page the guest will see the showcase to see the web site images.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+If the user login as **admin**, the user can access the **/admin** route. If the user login as a user, the user can access /user route in the application. If he is a guest, he only can access /home page, neither /admin nor /user route.
 
-## Build
+I will examine how to implement role-based access between routes.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+I will use the Angular Guard's to protect routes.
 
-## Running unit tests
+## What's an Angular Guard?
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+The interfaces that inform whether the requested route is allowed are called guards. While performing these operations, the guards look at the return values of the implemented interfaces' methods.
 
-## Running end-to-end tests
+There are different types of guard methods I listed below.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+What's these methods?
 
-## Further help
+- `CanActivate`
+    - Controls whether a route can be activated. Interface that a class can implement to be a guard deciding if a route can be activated. If all guards return true, navigation will continue. If any guard returns false, navigation will be cancelled.
+- `CanActivateChild`
+    - Interface that a class can implement to be a guard deciding if a child route can be activated. If all guards return true, navigation will continue. If any guard returns false, navigation will be canceled.
+- `CanDeactivate`
+    - Interface that a class can implement to be a guard deciding if a route can be deactivated. If all guards return true, navigation will continue. If any guard returns false, navigation will be canceled.
+- `CanLoad`
+    - Interface that a class can implement to be a guard deciding if children can be loaded.
+- `Resolve`
+    - Interface that classes can implement to be a data provider. A data provider class can be used with the router to resolve data during navigation.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+In this blog post, I will use the `CanActivate` guard to protect the router's link. You can easily implement role-based protection for your router, you could use like  `CanActivateChild` like the same way.
+
+## Let's begin
+
+1. [AuthService](#authservice)
+2. [AuthGuard](#authguard-implementation)
+3. [Routing Module](#routing-module-implementation)
+
+
+Let's examine these topics.
+
+
+1. **AuthService**
+
+I have created an Auth service that provides information about the user's login status and roles.
+
+I don't have any integration about jwt token implementation. This is just a simple simulation for login and getting roles. 
+
+login() function takes a string argument and store a user login state and role. The value entered as an argument to the role.
+
+logout() function removes the user's information about login from local storage.
+
+isLoggedIn() function inform us whether the user is logged into the system.
+
+getRole() function gives us the user's role from local storage.
+
+AuthService
+
+```javascript
+    @Injectable({
+      providedIn: 'root'
+    })
+    export class AuthService {
+      isLogin = false;
+    
+      roleAs: string;
+    
+      constructor() { }
+    
+      login(value: string) {
+        this.isLogin = true;
+        this.roleAs = value;
+        localStorage.setItem('STATE', 'true');
+        localStorage.setItem('ROLE', this.roleAs);
+        return of({ success: this.isLogin, role: this.roleAs });
+      }
+    
+      logout() {
+        this.isLogin = false;
+        this.roleAs = '';
+        localStorage.setItem('STATE', 'false');
+        localStorage.setItem('ROLE', '');
+        return of({ success: this.isLogin, role: '' });
+      }
+    
+      isLoggedIn() {
+        const loggedIn = localStorage.getItem('STATE');
+        if (loggedIn == 'true')
+          this.isLogin = true;
+        else
+          this.isLogin = false;
+        return this.isLogin;
+      }
+    
+      getRole() {
+        this.roleAs = localStorage.getItem('ROLE');
+        return this.roleAs;
+      }
+    
+    }
+```
+
+2. **AuthGuard Implementation**
+
+AuthGuard.ts
+
+To create a guard you should use angular-cli command. This can be like below.
+
+Create auth-guard
+
+n generate guard auth
+
+The method that will run before each request to the router is the `CanActivate` interface method.
+
+In this method we will check if the user is logged in and has a correct role.
+
+checkUserLogin() method takes 2 parameters. These are `ActivatedRouteSnapshot` and  `url` .
+
+We control the role stored in the value of the `data` object given to the router. If it has a correct role the method will return `true`, otherwise return false and navigate to `/home` route. 
+
+```javascript
+    @Injectable({
+      providedIn: 'root'
+    })
+    export class AuthGuard implements CanActivate, CanActivateChild, CanDeactivate<unknown>, CanLoad {
+    
+    
+      constructor(private authService: AuthService, private router: Router) { }
+    
+      canActivate(
+        next: ActivatedRouteSnapshot,
+        state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+        let url: string = state.url;
+        return this.checkUserLogin(next, url);
+      }
+      canActivateChild(
+        next: ActivatedRouteSnapshot,
+        state: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+        return this.canActivate(next, state);
+      }
+      canDeactivate(
+        component: unknown,
+        currentRoute: ActivatedRouteSnapshot,
+        currentState: RouterStateSnapshot,
+        nextState?: RouterStateSnapshot): Observable<boolean | UrlTree> | Promise<boolean | UrlTree> | boolean | UrlTree {
+        return true;
+      }
+      canLoad(
+        route: Route,
+        segments: UrlSegment[]): Observable<boolean> | Promise<boolean> | boolean {
+        return true;
+      }
+    
+      checkUserLogin(route: ActivatedRouteSnapshot, url: any): boolean {
+        if (this.authService.isLoggedIn()) {
+          const userRole = this.authService.getRole();
+          if (route.data.role && route.data.role.indexOf(userRole) === -1) {
+            this.router.navigate(['/home']);
+            return false;
+          }
+          return true;
+        }
+    
+        this.router.navigate(['/home']);
+        return false;
+      }
+    }
+```
+
+3. **Routing Module Implementation**
+
+We will provide the Routes object with information about the role. This process is simple. All you have to do is add a `guard` and add your `data`to the role.
+
+Adding guard like below,
+ `canActivate: [AuthGuard]`
+You can give the role information that will access that page like below,
+
+```json
+    data: {
+          role: 'ROLE_ADMIN'
+     }`
+```
+
+routing-module.ts
+
+```javascript
+    const routes: Routes = [
+    
+      { path: '', redirectTo: '/home', pathMatch: 'full' },
+      { path: 'home', component: HomeComponent },
+      {
+        path: 'admin', component: AdminDashboardComponent,
+        canActivate: [AuthGuard],
+        data: {
+          role: 'ROLE_ADMIN'
+        }
+      },
+      { path: 'user', component: UserDashboardComponent,
+        canActivate: [AuthGuard],
+        data: {
+          role: 'ROLE_USER'
+        }
+      },
+      { path: '**', component: NotFoundComponent }
+    
+    ];
+    
+    @NgModule({
+      imports: [RouterModule.forRoot(routes)],
+      exports: [RouterModule]
+    })
+    export class AppRoutingModule { }
+```
+
+With the above scenario, you can protect your routes based on role.
+
+This is a very simple project to implement it.  I am adding a video showing how it works.
+
+[Youtube Link](https://bit.ly/2VjzVzH)
+
+The source code of the project on github. 
+
+I hope you enjoy when reading.
+
+Have a nice coding.
+
+References
+
+- [angular.io](https://angular.io/guide/router)
