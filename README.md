@@ -37,15 +37,18 @@ In this blog post, I will use the `CanActivate` guard to protect the router's li
 
 ## Let's begin
 
-1. [AuthService](#authservice)
-2. [AuthGuard](#authguard-implementation)
-3. [Routing Module](#routing-module-implementation)
+- [Angular Role Based Route Guard](#angular-role-based-route-guard)
+  - [What's an Angular Guard?](#whats-an-angular-guard)
+  - [Let's begin](#lets-begin)
+    - [**AuthService**](#authservice)
+    - [**AuthGuard Implementation**](#authguard-implementation)
+    - [**Routing Module Implementation**](#routing-module-implementation)
 
 
 Let's examine these topics.
 
 
-1. **AuthService**
+### **AuthService**
 
 I have created an Auth service that provides information about the user's login status and roles.
 
@@ -105,7 +108,7 @@ AuthService
     }
 ```
 
-2. **AuthGuard Implementation**
+### **AuthGuard Implementation**
 
 AuthGuard.ts
 
@@ -172,7 +175,7 @@ We control the role stored in the value of the `data` object given to the router
     }
 ```
 
-3. **Routing Module Implementation**
+### **Routing Module Implementation**
 
 We will provide the Routes object with information about the role. This process is simple. All you have to do is add a `guard` and add your `data`to the role.
 
