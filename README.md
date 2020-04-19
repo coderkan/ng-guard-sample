@@ -226,7 +226,7 @@ This is a very simple project to implement it.  I am adding a video showing how 
 
 [Youtube Link](https://bit.ly/2VjzVzH)
 
-The source code of the project on github. 
+The source code of the project on [github](https://bit.ly/2VLSSue). 
 
 I hope you enjoy when reading.
 
