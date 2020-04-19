@@ -8,11 +8,21 @@ Demo's scenario;
 
 I have created a simple application that includes **Admin**, **User** roles. On the main page the guest will see the showcase to see the web site images.
 
-If the user login as **admin**, the user can access the **/admin** route. If the user login as a user, the user can access /user route in the application. If he is a guest, he only can access /home page, neither /admin nor /user route.
+If the user login as **admin**, the user can access the **/admin** route. If the user login as a user, the user can access `/user` route in the application. If he is a guest, he only can access `/home` page, neither `/admin` nor `/user` route.
 
 I will examine how to implement role-based access between routes.
 
 I will use the Angular Guard's to protect routes.
+
+
+## Let's Begin
+
+  - [**What's an Angular Guard?**](#whats-an-angular-guard)
+  - [**AuthService**](#authservice)
+  - [**AuthGuard Implementation**](#authguard-implementation)
+  - [**Routing Module Implementation**](#routing-module-implementation)
+
+
 
 ## What's an Angular Guard?
 
@@ -35,18 +45,6 @@ What's these methods?
 
 In this blog post, I will use the `CanActivate` guard to protect the router's link. You can easily implement role-based protection for your router, you could use like  `CanActivateChild` like the same way.
 
-## Let's begin
-
-- [Angular Role Based Route Guard](#angular-role-based-route-guard)
-  - [What's an Angular Guard?](#whats-an-angular-guard)
-  - [Let's begin](#lets-begin)
-    - [**AuthService**](#authservice)
-    - [**AuthGuard Implementation**](#authguard-implementation)
-    - [**Routing Module Implementation**](#routing-module-implementation)
-
-
-Let's examine these topics.
-
 
 ### **AuthService**
 
@@ -54,13 +52,13 @@ I have created an Auth service that provides information about the user's login 
 
 I don't have any integration about jwt token implementation. This is just a simple simulation for login and getting roles. 
 
-login() function takes a string argument and store a user login state and role. The value entered as an argument to the role.
+`login()` function takes a string argument and store a user login state and role. The value entered as an argument to the role.
 
-logout() function removes the user's information about login from local storage.
+`logout()` function removes the user's information about login from local storage.
 
-isLoggedIn() function inform us whether the user is logged into the system.
+`isLoggedIn()` function inform us whether the user is logged into the system.
 
-getRole() function gives us the user's role from local storage.
+`getRole()` function gives us the user's role from local storage.
 
 AuthService
 
@@ -116,13 +114,13 @@ To create a guard you should use angular-cli command. This can be like below.
 
 Create auth-guard
 
-n generate guard auth
+    ng generate guard auth
 
 The method that will run before each request to the router is the `CanActivate` interface method.
 
 In this method we will check if the user is logged in and has a correct role.
 
-checkUserLogin() method takes 2 parameters. These are `ActivatedRouteSnapshot` and  `url` .
+`checkUserLogin()` method takes 2 parameters. These are `ActivatedRouteSnapshot` and  `url` .
 
 We control the role stored in the value of the `data` object given to the router. If it has a correct role the method will return `true`, otherwise return false and navigate to `/home` route. 
 
@@ -180,7 +178,9 @@ We control the role stored in the value of the `data` object given to the router
 We will provide the Routes object with information about the role. This process is simple. All you have to do is add a `guard` and add your `data`to the role.
 
 Adding guard like below,
+
  `canActivate: [AuthGuard]`
+
 You can give the role information that will access that page like below,
 
 ```json
@@ -228,7 +228,7 @@ This is a very simple project to implement it.  I am adding a video showing how 
 
 The source code of the project on [github](https://bit.ly/2VLSSue). 
 
-I hope you enjoy when reading.
+I hope you enjoy when reading   .
 
 Have a nice coding.
 
